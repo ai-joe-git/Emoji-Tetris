@@ -17,7 +17,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            background: linear-gradient(45deg, #1e3c72 0%, #2a5298 100%);
             overflow: hidden;
         }
 
@@ -49,15 +49,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5vw;
+            font-size: 2vw;
             transition: all 0.1s ease;
         }
 
-        #score, #level {
+        #score, #level, #high-score {
             position: absolute;
             top: 20px;
             font-size: 18px;
-            color: #333;
+            color: #fff;
         }
 
         #score {
@@ -66,6 +66,11 @@
 
         #level {
             right: 20px;
+        }
+
+        #high-score {
+            left: 20px;
+            top: 50px;
         }
 
         #controls {
@@ -144,6 +149,85 @@
             margin-right: 10px;
         }
 
+        #next-piece, #hold-piece {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+        }
+
+        #next-piece {
+            top: 100px;
+            right: 20px;
+        }
+
+        #hold-piece {
+            top: 200px;
+            right: 20px;
+        }
+
+        #hold-btn {
+            position: absolute;
+            top: 290px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #theme-select {
+            position: absolute;
+            top: 350px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particleFade 1s forwards;
+        }
+
+        @keyframes particleFade {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        #power-up {
+            position: absolute;
+            top: 400px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #challenge-mode {
+            position: absolute;
+            top: 460px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
         @media (max-width: 600px) {
             .game-container {
                 width: 95vw;
@@ -151,16 +235,56 @@
             }
 
             .cell {
-                font-size: 4vw;
+                font-size: 5vw;
             }
 
-            #score, #level {
+            #score, #level, #high-score {
                 font-size: 14px;
             }
 
             .control-btn {
                 padding: 8px 16px;
                 font-size: 20px;
+            }
+
+            #next-piece, #hold-piece {
+                width: 60px;
+                height: 60px;
+                font-size: 18px;
+            }
+
+            #next-piece {
+                top: 80px;
+                right: 10px;
+            }
+
+            #hold-piece {
+                top: 150px;
+                right: 10px;
+            }
+
+            #hold-btn {
+                top: 220px;
+                right: 10px;
+                font-size: 16px;
+            }
+
+            #theme-select {
+                top: 270px;
+                right: 10px;
+                font-size: 14px;
+            }
+
+            #power-up {
+                top: 320px;
+                right: 10px;
+                font-size: 16px;
+            }
+
+            #challenge-mode {
+                top: 370px;
+                right: 10px;
+                font-size: 14px;
             }
         }
     </style>
@@ -169,6 +293,7 @@
     <div class="game-container">
         <div id="score">Score: 0</div>
         <div id="level">Level: 1</div>
+        <div id="high-score">High Score: 0</div>
         <div id="game-board"></div>
         <div id="controls">
             <button class="control-btn" id="left-btn">⬅️</button>
@@ -177,6 +302,20 @@
             <button class="control-btn" id="down-btn">⬇️</button>
         </div>
         <button id="settings">⚙️</button>
+        <div id="next-piece"></div>
+        <div id="hold-piece"></div>
+        <button id="hold-btn">🔒</button>
+        <select id="theme-select">
+            <option value="default">Default</option>
+            <option value="fruits">Fruits</option>
+            <option value="animals">Animals</option>
+        </select>
+        <button id="power-up">⚡</button>
+        <select id="challenge-mode">
+            <option value="normal">Normal</option>
+            <option value="timed">Timed</option>
+            <option value="line-goal">Line Goal</option>
+        </select>
     </div>
 
     <div id="settingsModal" class="modal">
@@ -207,16 +346,33 @@
             { shape: [[1, 1, 1], [0, 0, 1]], emoji: '🟫' }
         ];
 
+        const THEMES = {
+            default: ['🟨', '🟦', '🟪', '🟥', '🟩', '🟧', '🟫'],
+            fruits: ['🍎', '🍌', '🍇', '🍊', '🍓', '🍑', '🍍'],
+            animals: ['🐶', '🐱', '🐭', '🐰', '🦊', '🐻', '🐼']
+        };
+
         let board = Array(BOARD_HEIGHT).fill().map(() => Array(BOARD_WIDTH).fill(0));
         let currentPiece, currentX, currentY;
+        let nextPiece;
+        let holdPiece;
+        let canHold = true;
         let score = 0;
         let level = 1;
+        let highScore = parseInt(localStorage.getItem('highScore')) || 0;
         let gameLoop;
         let dropInterval = 1000;
+        let lastMoveTime = 0;
+        let currentTheme = 'default';
+        let powerUpActive = false;
+        let challengeMode = 'normal';
+        let challengeTimer;
+        let challengeGoal;
 
         const gameBoard = document.getElementById('game-board');
         const scoreDisplay = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
+        const highScoreDisplay = document.getElementById('high-score');
         const leftBtn = document.getElementById('left-btn');
         const rightBtn = document.getElementById('right-btn');
         const rotateBtn = document.getElementById('rotate-btn');
@@ -226,6 +382,12 @@
         const closeBtn = document.getElementsByClassName('close')[0];
         const musicToggle = document.getElementById('musicToggle');
         const sfxToggle = document.getElementById('sfxToggle');
+        const nextPieceDisplay = document.getElementById('next-piece');
+        const holdPieceDisplay = document.getElementById('hold-piece');
+        const holdBtn = document.getElementById('hold-btn');
+        const themeSelect = document.getElementById('theme-select');
+        const powerUpBtn = document.getElementById('power-up');
+        const challengeModeSelect = document.getElementById('challenge-mode');
 
         let musicEnabled = true;
         let sfxEnabled = true;
@@ -256,20 +418,35 @@
                     cells[y * BOARD_WIDTH + x].innerHTML = value ? value : '';
                 });
             });
+            drawGhostPiece();
         }
 
         function createPiece() {
-            const pieceType = TETROMINOES[Math.floor(Math.random() * TETROMINOES.length)];
-            currentPiece = {
-                shape: pieceType.shape,
-                emoji: pieceType.emoji
-            };
+            if (!nextPiece) {
+                nextPiece = getRandomPiece();
+            }
+            currentPiece = nextPiece;
+            nextPiece = getRandomPiece();
             currentX = Math.floor(BOARD_WIDTH / 2) - Math.ceil(currentPiece.shape[0].length / 2);
             currentY = 0;
 
             if (!canMoveTo(currentX, currentY)) {
                 gameOver();
             }
+
+            updateNextPieceDisplay();
+        }
+
+        function getRandomPiece() {
+            const pieceType = TETROMINOES[Math.floor(Math.random() * TETROMINOES.length)];
+            return {
+                shape: pieceType.shape,
+                emoji: THEMES[currentTheme][TETROMINOES.indexOf(pieceType)]
+            };
+        }
+
+        function updateNextPieceDisplay() {
+            nextPieceDisplay.innerHTML = nextPiece.emoji;
         }
 
         function drawPiece() {
@@ -278,7 +455,27 @@
                 row.forEach((value, x) => {
                     if (value) {
                         const cellIndex = (currentY + y) * BOARD_WIDTH + (currentX + x);
-                        cells[cellIndex].innerHTML = currentPiece.emoji;
+                        if (cellIndex >= 0 && cellIndex < cells.length) {
+                            cells[cellIndex].innerHTML = currentPiece.emoji;
+                        }
+                    }
+                });
+            });
+        }
+
+        function drawGhostPiece() {
+            const cells = document.querySelectorAll('.cell');
+            let ghostY = currentY;
+            while (canMoveTo(currentX, ghostY + 1)) {
+                ghostY++;
+            }
+            currentPiece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        const cellIndex = (ghostY + y) * BOARD_WIDTH + (currentX + x);
+                        if (cellIndex >= 0 && cellIndex < cells.length) {
+                            cells[cellIndex].innerHTML += '<span style="opacity: 0.3;">👻</span>';
+                        }
                     }
                 });
             });
@@ -325,10 +522,18 @@
         }
 
         function dropPiece() {
-            if (!movePiece(0, 1)) {
-                mergePiece();
-                createPiece();
+            const now = Date.now();
+            if (now - lastMoveTime > dropInterval) {
+                if (!movePiece(0, 1)) {
+                    mergePiece();
+                    createPiece();
+                    canHold = true;
+                }
+                lastMoveTime = now;
             }
+            drawBoard();
+            drawPiece();
+            requestAnimationFrame(dropPiece);
         }
 
         function mergePiece() {
@@ -350,6 +555,7 @@
                     board.unshift(Array(BOARD_WIDTH).fill(0));
                     linesCleared++;
                     y++;
+                    createParticles(y);
                 }
             }
             if (linesCleared > 0) {
@@ -358,24 +564,46 @@
             }
         }
 
+        function createParticles(row) {
+            for (let x = 0; x < BOARD_WIDTH; x++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.innerHTML = '✨';
+                particle.style.left = `${x * (gameBoard.clientWidth / BOARD_WIDTH)}px`;
+                particle.style.top = `${row * (gameBoard.clientHeight / BOARD_HEIGHT)}px`;
+                gameBoard.appendChild(particle);
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
         function updateScore(linesCleared) {
             const points = [40, 100, 300, 1200];
             score += points[linesCleared - 1] * level;
             scoreDisplay.textContent = `Score: ${score}`;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+                highScoreDisplay.textContent = `High Score: ${highScore}`;
+            }
             if (score >= level * 1000) {
                 level++;
                 levelDisplay.textContent = `Level: ${level}`;
-                dropInterval = Math.max(100, 1000 - (level - 1) * 100);
-                clearInterval(gameLoop);
-                gameLoop = setInterval(dropPiece, dropInterval);
+                dropInterval = Math.max(100, 1000 - (level - 1) * 50);
+            }
+            if (challengeMode === 'line-goal') {
+                challengeGoal -= linesCleared;
+                if (challengeGoal <= 0) {
+                    alert(`Challenge completed! Your score: ${score}`);
+                    startGame();
+                }
             }
         }
 
         function gameOver() {
-            clearInterval(gameLoop);
             if (sfxEnabled) gameOverSound.play();
             if (musicEnabled) bgMusic.pause();
             alert(`Game Over! Your score: ${score}`);
+            startGame();
         }
 
         function startGame() {
@@ -385,11 +613,71 @@
             dropInterval = 1000;
             scoreDisplay.textContent = 'Score: 0';
             levelDisplay.textContent = 'Level: 1';
+            highScoreDisplay.textContent = `High Score: ${highScore}`;
+            nextPiece = null;
+            holdPiece = null;
+            canHold = true;
             createPiece();
             drawBoard();
-            if (gameLoop) clearInterval(gameLoop);
-            gameLoop = setInterval(dropPiece, dropInterval);
+            lastMoveTime = Date.now();
             if (musicEnabled) bgMusic.play();
+            if (challengeMode === 'timed') {
+                challengeTimer = 120; // 2 minutes
+                updateChallengeTimer();
+            } else if (challengeMode === 'line-goal') {
+                challengeGoal = 20; // Clear 20 lines
+            }
+            requestAnimationFrame(dropPiece);
+        }
+
+        function holdCurrentPiece() {
+            if (!canHold) return;
+            if (holdPiece) {
+                const temp = currentPiece;
+                currentPiece = holdPiece;
+                holdPiece = temp;
+                currentX = Math.floor(BOARD_WIDTH / 2) - Math.ceil(currentPiece.shape[0].length / 2);
+                currentY = 0;
+            } else {
+                holdPiece = currentPiece;
+                createPiece();
+            }
+            canHold = false;
+            updateHoldPieceDisplay();
+            drawBoard();
+            drawPiece();
+        }
+
+        function updateHoldPieceDisplay() {
+            holdPieceDisplay.innerHTML = holdPiece ? holdPiece.emoji : '';
+        }
+
+        function activatePowerUp() {
+            if (powerUpActive) return;
+            powerUpActive = true;
+            clearBottomRows(2);
+            setTimeout(() => {
+                powerUpActive = false;
+            }, 10000);
+        }
+
+        function clearBottomRows(numRows) {
+            for (let i = 0; i < numRows; i++) {
+                board.pop();
+                board.unshift(Array(BOARD_WIDTH).fill(0));
+            }
+            drawBoard();
+        }
+
+        function updateChallengeTimer() {
+            if (challengeMode !== 'timed') return;
+            challengeTimer--;
+            if (challengeTimer <= 0) {
+                alert(`Time's up! Your score: ${score}`);
+                startGame();
+            } else {
+                setTimeout(updateChallengeTimer, 1000);
+            }
         }
 
         document.addEventListener('keydown', (e) => {
@@ -406,6 +694,13 @@
                 case 'ArrowUp':
                     rotatePiece();
                     break;
+                case ' ':
+                    while (movePiece(0, 1)) {}
+                    break;
+                case 'c':
+                case 'C':
+                    holdCurrentPiece();
+                    break;
             }
         });
 
@@ -413,6 +708,7 @@
         rightBtn.addEventListener('click', () => movePiece(1, 0));
         downBtn.addEventListener('click', () => movePiece(0, 1));
         rotateBtn.addEventListener('click', rotatePiece);
+        holdBtn.addEventListener('click', holdCurrentPiece);
 
         settingsBtn.addEventListener('click', () => {
             settingsModal.style.display = 'block';
@@ -439,6 +735,18 @@
 
         sfxToggle.addEventListener('change', () => {
             sfxEnabled = sfxToggle.checked;
+        });
+
+        themeSelect.addEventListener('change', (e) => {
+            currentTheme = e.target.value;
+            startGame();
+        });
+
+        powerUpBtn.addEventListener('click', activatePowerUp);
+
+        challengeModeSelect.addEventListener('change', (e) => {
+            challengeMode = e.target.value;
+            startGame();
         });
 
         initBoard();
